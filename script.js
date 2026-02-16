@@ -158,7 +158,7 @@ function sendMessage() {
   addMessage("user", text);
   promptEl.value = "";
   
-  fetch("https://hook.eu1.make.com/r04fdt4l529fdupb11uppfcstdx5ynx6", {
+  fetch("https://hook.eu2.make.com/st14fh11cfbigyzpxo6clkermnat59v8", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ input: text })
