@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Deprem Kuşağı AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="favico.png" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="https://robercarikliyan.github.io"><img src="logo_project.png" alt="logo" title="Deprem Kuşağı AI" width="100%"></a>
+      <button id="newChatBtn" class="new-chat-btn">＋ Yeni Sohbet</button>
+    </div>
+
+    <div class="chat-history" id="chatList">
+      <!-- Chat item -->
+      <div class="chat-item active">
+        <span class="chat-title">Yeni Sohbet</span>
+        <button class="chat-delete-btn" title="Delete">🗑</button>
+      </div>
+
+      <!-- örnek -->
+      <div class="chat-item">
+        <span class="chat-title">Chat 2</span>
+        <button class="chat-delete-btn">🗑</button>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+          <div class="info-container">
+          <span class="info-icon">ℹ️ <span class="username">Deprem Kuşağı AI</span></span>
+          <div class="info-bubble">
+            <strong>Nasıl Kullanılır?</strong><br>
+            - Şehir adı yazın (örn: İstanbul)<br>
+            - Tarih yazın (örn: 17 Ağustos 1999)<br>
+            - Büyüklük belirtin (örn: 4+)<br>
+            - Kandilli api + web search kullanılır.<br>
+            - Hazırlayan: Rober Çarıklıyan
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT AREA -->
+  <main class="chat-container">
+
+    <!-- HEADER -->
+    <header class="chat-header">
+      <h1 class="chat-title-main">Sohbet</h1>
+    </header>
+
+    <!-- MESSAGES -->
+    <section class="messages" id="messages">
+      <!-- Assistant message -->
+      <div class="message assistant">
+        <div class="avatar"></div>
+        <div class="bubble">
+          Merhaba, nasıl yardımcı olabilirim?
+        </div>
+      </div>
+
+      <!-- User message -->
+      <div class="message user">
+        <div class="bubble">
+          Selam
+        </div>
+      </div>
+    </section>
+
+    <!-- INPUT AREA -->
+    <footer class="chat-input-area">
+      <div class="input-wrapper">
+        <textarea
+          id="prompt"
+          rows="1"
+          placeholder="Mesaj yaz..."
+        ></textarea>
+
+        <button id="sendBtn" class="send-btn">
+          ➤
+        </button>
+      </div>
+    </footer>
+
+  </main>
+
+</div>
+
+<!-- JS -->
+<script src="script.js"></script>
+</body>
+</html>
