@@ -49,8 +49,8 @@ function applyTheme(theme) {
 function updateLogoBasedOnTheme(isLight) {
   const logoImg = document.querySelector('.logo-link img');
   if (logoImg) {
-    // Light theme uses light logo, dark theme uses dark logo
-    const filename = isLight ? "logo_ui_light.png" : "logo_ui.png";
+    // Light theme uses dark logo, dark theme uses light logo (for contrast)
+    const filename = isLight ? "logo_ui.png" : "logo_ui_light.png";
     logoImg.src = filename + "?v=" + Date.now();
   }
 }
