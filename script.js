@@ -63,10 +63,10 @@ function updateLogoBasedOnTheme(isLight) {
 }
 
 function updateAvatarBackground(isLight) {
+  const filename = isLight ? "logo_ui_dark.png" : "logo_ui_light.png";
   const avatars = document.querySelectorAll('.message.assistant .avatar');
   avatars.forEach(avatar => {
-    const filename = isLight ? "logo_ui_dark.png" : "logo_ui_light.png";
-    avatar.style.backgroundImage = `url('${filename}?v=' + Math.random())`;
+    avatar.style.backgroundImage = `url('${filename}?v=${Math.random()}')`;
   });
 }
 
@@ -262,6 +262,13 @@ function addMessageToDOM(role, content, isTyping = false) {
   if (role === "assistant") {
     const avatar = document.createElement("div");
     avatar.className = "avatar";
+
+    // Set correct logo based on current theme
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    const isLight = currentTheme === "light";
+    const filename = isLight ? "logo_ui_dark.png" : "logo_ui_light.png";
+    avatar.style.backgroundImage = `url('${filename}?v=${Math.random()}')`;
+
     wrapper.appendChild(avatar);
   }
 
