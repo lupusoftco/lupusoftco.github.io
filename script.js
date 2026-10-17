@@ -229,7 +229,7 @@ function renderMessages() {
   }, 0);
 }
 
-function addMessageToDOM(role, content) {
+function addMessageToDOM(role, content, isTyping = false) {
   const wrapper = document.createElement("div");
   wrapper.className = `message ${role}`;
 
@@ -241,23 +241,53 @@ function addMessageToDOM(role, content) {
 
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-
-  // Use safe message creation to prevent XSS
-  const safeContent = createSafeMessageElement(content);
-  bubble.appendChild(safeContent);
+  bubble.id = `bubble-${Date.now()}`;
 
   wrapper.appendChild(bubble);
   messagesEl.appendChild(wrapper);
 
+  if (isTyping && role === "assistant") {
+    // Typing animation for assistant messages
+    typeMessage(bubble, content);
+  } else {
+    // Regular display for user messages
+    const safeContent = createSafeMessageElement(content);
+    bubble.appendChild(safeContent);
+  }
+
   // Auto-scroll to bottom
   messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// Typing animation effect
+function typeMessage(bubbleElement, content) {
+  const TYPING_SPEED = 30; // ms per character
+  let index = 0;
+  let currentText = "";
+
+  const typeInterval = setInterval(() => {
+    if (index < content.length) {
+      currentText += content[index];
+      bubbleElement.innerHTML = "";
+
+      // Parse and display with links
+      const safeContent = createSafeMessageElement(currentText);
+      bubbleElement.appendChild(safeContent);
+
+      // Auto-scroll
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      index++;
+    } else {
+      clearInterval(typeInterval);
+    }
+  }, TYPING_SPEED);
 }
 
 // ============================================================================
 // MESSAGE HANDLING
 // ============================================================================
 
-function addMessage(role, content) {
+function addMessage(role, content, isTyping = false) {
   const chat = getCurrentChat();
   if (!chat) return;
 
@@ -270,7 +300,7 @@ function addMessage(role, content) {
 
   saveState();
   renderChats();
-  addMessageToDOM(role, content);
+  addMessageToDOM(role, content, isTyping);
 }
 
 async function sendMessage() {
@@ -306,9 +336,9 @@ async function sendMessage() {
     const data = await response.text();
 
     if (data && data.trim()) {
-      addMessage("assistant", data.trim());
+      addMessage("assistant", data.trim(), true);
     } else {
-      addMessage("assistant", "Yanıt boş geldi. Lütfen tekrar deneyin.");
+      addMessage("assistant", "Yanıt boş geldi. Lütfen tekrar deneyin.", true);
     }
   } catch (error) {
     console.error("Error:", error);
@@ -320,7 +350,7 @@ async function sendMessage() {
       errorMessage = "Sunucu hatası. Lütfen daha sonra tekrar deneyin.";
     }
 
-    addMessage("assistant", errorMessage);
+    addMessage("assistant", errorMessage, true);
   } finally {
     setLoading(false);
     promptEl.focus();
