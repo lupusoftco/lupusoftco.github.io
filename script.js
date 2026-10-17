@@ -272,11 +272,6 @@ function setLoading(isLoading) {
   state.isLoading = isLoading;
   loadingIndicator.style.display = isLoading ? "flex" : "none";
   sendBtn.disabled = isLoading;
-  promptEl.disabled = isLoading;
-
-  if (!isLoading) {
-    promptEl.focus();
-  }
 }
 
 // Get current active chat
@@ -445,6 +440,8 @@ function typeMessage(bubbleElement, content) {
       index++;
     } else {
       clearInterval(typeInterval);
+      setLoading(false);
+      promptEl.focus();
     }
   }, TYPING_SPEED);
 }
@@ -536,8 +533,7 @@ async function sendMessage() {
 
     addMessage("assistant", errorMessage, true);
   } finally {
-    setLoading(false);
-    promptEl.focus();
+    // Loading state and focus handled by typeMessage() when typing completes
   }
 }
 
