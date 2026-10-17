@@ -12,6 +12,8 @@ const newChatBtn = document.getElementById("newChatBtn");
 const themeBtn = document.getElementById("themeBtn");
 const exportBtn = document.getElementById("exportBtn");
 const loadingIndicator = document.getElementById("loadingIndicator");
+const menuToggle = document.getElementById("menuToggle");
+const sidebar = document.querySelector(".sidebar");
 
 // CONFIGURATION
 const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/st14fh11cfbigyzpxo6clkermnat59v8";
@@ -429,6 +431,28 @@ themeBtn.onclick = toggleTheme;
 
 // Export button
 exportBtn.onclick = exportChats;
+
+// Mobile menu toggle
+function updateMenuToggleVisibility() {
+  const isMobile = window.innerWidth <= 768;
+  if (menuToggle) {
+    menuToggle.style.display = isMobile ? "block" : "none";
+  }
+}
+
+function toggleSidebar() {
+  if (sidebar) {
+    sidebar.classList.toggle("open");
+  }
+}
+
+if (menuToggle) {
+  menuToggle.onclick = toggleSidebar;
+}
+
+// Close sidebar when clicking on a chat (mobile)
+window.addEventListener("resize", updateMenuToggleVisibility);
+window.addEventListener("load", updateMenuToggleVisibility);
 
 // ============================================================================
 // INITIALIZATION
