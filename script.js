@@ -489,10 +489,23 @@ async function sendMessage() {
   setLoading(true);
 
   try {
+    // Get all learnings and format them
+    const learnings = learningHandler.getAllLearnings();
+    let contextText = text;
+
+    if (learnings.length > 0) {
+      const learningsContext = learnings
+        .slice(0, 20) // Last 20 learnings
+        .map(l => `- ${l.category} | ${l.title}: ${l.content}`)
+        .join('\n');
+
+      contextText = `📚 ÖNCEKI ÖĞRENMELER:\n${learningsContext}\n\nYENİ SORU:\n${text}`;
+    }
+
     const response = await fetch(MAKE_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input: text })
+      body: JSON.stringify({ input: contextText })
     });
 
     if (!response.ok) {
