@@ -6,7 +6,7 @@
 // LEARNING MODULE - Auto-learns from AI responses
 class LearningHandler {
   constructor() {
-    this.learningPattern = /\[LEARNING\]\s+([^|]+)\|\s+([^|]+)\|\s+(.+?)(?=\n|$)/g;
+    this.learningPattern = /\[LEARNING\]\s+([^|]+)\|\s+(.+?)(?=\n|$)/g;
     this.storageKey = 'lupux_learnings';
     this.maxLearnings = 500;
   }
@@ -19,9 +19,8 @@ class LearningHandler {
     while ((match = this.learningPattern.exec(aiResponse)) !== null) {
       learnings.push({
         id: Date.now() + Math.random(),
-        category: match[1].trim(),
-        title: match[2].trim(),
-        content: match[3].trim(),
+        title: match[1].trim(),
+        content: match[2].trim(),
         timestamp: new Date().toISOString(),
         date: new Date().toLocaleDateString('tr-TR')
       });
@@ -77,8 +76,8 @@ class LearningHandler {
     }
   }
 
-  getLearningsByCategory(category) {
-    return this.getAllLearnings().filter(l => l.category.includes(category));
+  getLearningsByTitle(searchTerm) {
+    return this.getAllLearnings().filter(l => l.title.toLowerCase().includes(searchTerm.toLowerCase()));
   }
 
   getTotalCount() {
