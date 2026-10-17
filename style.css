@@ -255,7 +255,6 @@ body {
 /* LOADING INDICATOR */
 .loading-indicator {
   padding: 12px 24px;
-  display: flex !important;
   align-items: flex-end;
   gap: 12px;
 }
