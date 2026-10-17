@@ -42,6 +42,15 @@ function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
   localStorage.setItem(STORAGE_KEYS.THEME, theme);
   updateThemeButtonText();
+  updateLogoBasedOnTheme(isLight);
+}
+
+function updateLogoBasedOnTheme(isLight) {
+  const logoImg = document.querySelector('.logo-link img');
+  if (logoImg) {
+    // Light theme uses light logo, dark theme uses dark logo
+    logoImg.src = isLight ? "logo_ui_light.png" : "logo_ui.png";
+  }
 }
 
 function toggleTheme() {
