@@ -1,7 +1,67 @@
 // ============================================================================
 // LupuX AI - Chat Interface (Refactored & Enhanced)
-// Features: Dark Mode, Export Chats, Loading State, XSS Protection
+// Features: Dark Mode, Export Chats, Loading State, XSS Protection, Learning Module
 // ============================================================================
+
+// LEARNING MODULE
+class LearningHandler {
+  constructor(githubToken = null) {
+    this.githubToken = githubToken;
+    this.learnings = [];
+    this.learningPattern = /\[LEARNING\]\s+([^|]+)\|\s+([^|]+)\|\s+(.+?)(?=\n|$)/g;
+  }
+
+  extractLearnings(aiResponse) {
+    const learnings = [];
+    let match;
+    this.learningPattern.lastIndex = 0;
+
+    while ((match = this.learningPattern.exec(aiResponse)) !== null) {
+      learnings.push({
+        category: match[1].trim(),
+        title: match[2].trim(),
+        content: match[3].trim(),
+        timestamp: new Date().toISOString(),
+        date: new Date().toLocaleDateString('tr-TR')
+      });
+    }
+
+    return learnings;
+  }
+
+  saveLearningLocally(learning) {
+    try {
+      const stored = JSON.parse(localStorage.getItem('lupux_learnings') || '[]');
+      stored.push(learning);
+      localStorage.setItem('lupux_learnings', JSON.stringify(stored));
+      console.log('✅ Learning saved:', learning.title);
+    } catch (error) {
+      console.error('❌ Error saving learning:', error);
+    }
+  }
+
+  async processResponse(aiResponse) {
+    const learnings = this.extractLearnings(aiResponse);
+
+    if (learnings.length === 0) {
+      return;
+    }
+
+    for (const learning of learnings) {
+      this.saveLearningLocally(learning);
+    }
+  }
+
+  getAllLearnings() {
+    try {
+      return JSON.parse(localStorage.getItem('lupux_learnings') || '[]');
+    } catch (error) {
+      return [];
+    }
+  }
+}
+
+const learningHandler = new LearningHandler();
 
 // DOM ELEMENTS
 const chatList = document.getElementById("chatList");
@@ -369,7 +429,12 @@ async function sendMessage() {
     const data = await response.text();
 
     if (data && data.trim()) {
-      addMessage("assistant", data.trim(), true);
+      // Process learning tags from response
+      learningHandler.processResponse(data.trim());
+
+      // Remove [LEARNING] tags for display
+      const cleanData = data.trim().replace(/\[LEARNING\][^\n]*\n?/g, '').trim();
+      addMessage("assistant", cleanData || data.trim(), true);
     } else {
       addMessage("assistant", "Yanıt boş geldi. Lütfen tekrar deneyin.", true);
     }
