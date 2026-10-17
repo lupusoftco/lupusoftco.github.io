@@ -1,84 +1,214 @@
-// ELEMENTS
+// ============================================================================
+// LupuX AI - Chat Interface (Refactored & Enhanced)
+// Features: Dark Mode, Export Chats, Loading State, XSS Protection
+// ============================================================================
+
+// DOM ELEMENTS
 const chatList = document.getElementById("chatList");
 const messagesEl = document.getElementById("messages");
 const promptEl = document.getElementById("prompt");
 const sendBtn = document.getElementById("sendBtn");
 const newChatBtn = document.getElementById("newChatBtn");
+const themeBtn = document.getElementById("themeBtn");
+const exportBtn = document.getElementById("exportBtn");
+const loadingIndicator = document.getElementById("loadingIndicator");
 
-// STATE
-let chats = JSON.parse(localStorage.getItem("chats")) || [];
-let currentChatId = localStorage.getItem("currentChatId") || null;
+// CONFIGURATION
+const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/st14fh11cfbigyzpxo6clkermnat59v8";
+const STORAGE_KEYS = {
+  CHATS: "lupux_chats",
+  CURRENT_CHAT: "lupux_current_chat",
+  THEME: "lupux_theme"
+};
 
-// UTIL
-function saveState() {
-  localStorage.setItem("chats", JSON.stringify(chats));
-  localStorage.setItem("currentChatId", currentChatId);
+// STATE MANAGEMENT
+const state = {
+  chats: JSON.parse(localStorage.getItem(STORAGE_KEYS.CHATS)) || [],
+  currentChatId: localStorage.getItem(STORAGE_KEYS.CURRENT_CHAT) || null,
+  isLoading: false
+};
+
+// ============================================================================
+// THEME MANAGEMENT
+// ============================================================================
+
+function initializeTheme() {
+  const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || "dark";
+  applyTheme(savedTheme);
 }
 
+function applyTheme(theme) {
+  const isLight = theme === "light";
+  document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
+  localStorage.setItem(STORAGE_KEYS.THEME, theme);
+  updateThemeButtonText();
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  applyTheme(newTheme);
+}
+
+function updateThemeButtonText() {
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+  themeBtn.textContent = currentTheme === "dark" ? "☀️ Tema" : "🌙 Tema";
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+// Generate unique ID for chats
 function generateId() {
   return Date.now().toString();
 }
 
+// Save state to localStorage
+function saveState() {
+  localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(state.chats));
+  localStorage.setItem(STORAGE_KEYS.CURRENT_CHAT, state.currentChatId);
+}
+
+// Format text with links (XSS-SAFE: uses textContent first, then replaces links)
+function createSafeMessageElement(text) {
+  const container = document.createElement("div");
+
+  // Split text by URL pattern
+  const urlRegex = /(https?:\/\/[^\s<]+)/g;
+  const parts = text.split(urlRegex);
+
+  parts.forEach((part, index) => {
+    if (urlRegex.test(part)) {
+      // This is a URL
+      const link = document.createElement("a");
+      link.href = part;
+      link.textContent = part;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.style.color = "inherit";
+      link.style.textDecoration = "underline";
+      link.style.fontWeight = "500";
+      container.appendChild(link);
+    } else {
+      // This is regular text - use textContent to prevent XSS
+      const span = document.createElement("span");
+      span.textContent = part;
+      container.appendChild(span);
+    }
+  });
+
+  // Handle line breaks (\n -> <br>)
+  const html = container.innerHTML
+    .replace(/\n/g, "<br>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;font-weight:500;">$1</a>');
+
+  const safeContainer = document.createElement("div");
+  safeContainer.innerHTML = html;
+  return safeContainer;
+}
+
+// Show/hide loading indicator
+function setLoading(isLoading) {
+  state.isLoading = isLoading;
+  loadingIndicator.style.display = isLoading ? "flex" : "none";
+  sendBtn.disabled = isLoading;
+
+  if (isLoading) {
+    promptEl.focus();
+  }
+}
+
+// Get current active chat
+function getCurrentChat() {
+  return state.chats.find(c => c.id === state.currentChatId) || null;
+}
+
+// ============================================================================
 // CHAT MANAGEMENT
+// ============================================================================
+
 function createNewChat() {
-  const id = generateId();
   const chat = {
-    id,
+    id: generateId(),
     title: "Yeni Sohbet",
     messages: [],
-    createdAt: Date.now()
+    createdAt: new Date().toISOString()
   };
-  chats.unshift(chat);
-  currentChatId = id;
+
+  state.chats.unshift(chat);
+  state.currentChatId = chat.id;
   saveState();
   renderChats();
   renderMessages();
+  promptEl.focus();
 }
 
 function deleteChat(id) {
-  chats = chats.filter(c => c.id !== id);
-  if (currentChatId === id) {
-    currentChatId = chats.length ? chats[0].id : null;
+  state.chats = state.chats.filter(c => c.id !== id);
+
+  if (state.currentChatId === id) {
+    state.currentChatId = state.chats.length ? state.chats[0].id : null;
+
+    if (state.currentChatId === null) {
+      createNewChat();
+      return;
+    }
   }
+
   saveState();
   renderChats();
   renderMessages();
 }
 
-function getCurrentChat() {
-  return chats.find(c => c.id === currentChatId) || null;
-}
+// ============================================================================
+// RENDERING
+// ============================================================================
 
-// RENDER
 function renderChats() {
   chatList.innerHTML = "";
 
-  chats.forEach(chat => {
+  if (state.chats.length === 0) {
+    const emptyMsg = document.createElement("div");
+    emptyMsg.style.padding = "12px";
+    emptyMsg.style.textAlign = "center";
+    emptyMsg.style.fontSize = "12px";
+    emptyMsg.style.opacity = "0.6";
+    emptyMsg.textContent = "Henüz sohbet yok";
+    chatList.appendChild(emptyMsg);
+    return;
+  }
+
+  state.chats.forEach(chat => {
     const item = document.createElement("div");
-    item.className = "chat-item" + (chat.id === currentChatId ? " active" : "");
+    item.className = "chat-item" + (chat.id === state.currentChatId ? " active" : "");
 
-    const title = document.createElement("span");
-    title.className = "chat-title";
-    title.textContent = chat.title;
+    const titleEl = document.createElement("span");
+    titleEl.className = "chat-title";
+    titleEl.textContent = chat.title;
 
-    const del = document.createElement("button");
-    del.className = "chat-delete-btn";
-    del.textContent = "🗑";
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "chat-delete-btn";
+    deleteBtn.textContent = "🗑";
+    deleteBtn.title = "Sohbeti Sil";
 
-    del.onclick = (e) => {
+    deleteBtn.onclick = (e) => {
       e.stopPropagation();
-      deleteChat(chat.id);
+      if (confirm("Bu sohbeti silmek istediğinize emin misiniz?")) {
+        deleteChat(chat.id);
+      }
     };
 
     item.onclick = () => {
-      currentChatId = chat.id;
+      state.currentChatId = chat.id;
       saveState();
       renderChats();
       renderMessages();
     };
 
-    item.appendChild(title);
-    item.appendChild(del);
+    item.appendChild(titleEl);
+    item.appendChild(deleteBtn);
     chatList.appendChild(item);
   });
 }
@@ -86,45 +216,17 @@ function renderChats() {
 function renderMessages() {
   messagesEl.innerHTML = "";
   const chat = getCurrentChat();
+
   if (!chat) return;
 
   chat.messages.forEach(msg => {
     addMessageToDOM(msg.role, msg.content);
   });
 
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-// LINK VE FORMAT DUZELTICI
-function formatLinks(text) {
-  if (!text) return "";
-  
-  // Önce Markdown linklerini [Başlık](URL) -> <a> çevir
-  let formattedText = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, 
-    '<a href="$2" target="_blank" style="color: #007bff; text-decoration: underline; font-weight: bold;">$1</a>');
-
-  // Sonra açıkta kalan normal URL'leri çevir
-  const urlRegex = /(?<!href="|">)(https?:\/\/[^\s<]+)/g;
-  formattedText = formattedText.replace(urlRegex, 
-    '<a href="$1" target="_blank" style="color: #007bff; text-decoration: underline;">$1</a>');
-
-  // Satır atlamalarını (Enter) HTML'e çevir (\n -> <br>)
-  return formattedText.replace(/\n/g, '<br>');
-}
-// MESSAGE
-function addMessage(role, content) {
-  const chat = getCurrentChat();
-  if (!chat) return;
-
-  chat.messages.push({ role, content });
-
-  if (chat.messages.length === 1 && role === "user") {
-    chat.title = content.slice(0, 30);
-  }
-
-  saveState();
-  renderChats();
-  addMessageToDOM(role, content);
+  // Auto-scroll to bottom
+  setTimeout(() => {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }, 0);
 }
 
 function addMessageToDOM(role, content) {
@@ -139,48 +241,132 @@ function addMessageToDOM(role, content) {
 
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-  
-  // BURASI KRITIK: Metni formatlayıp HTML olarak basıyoruz
-  bubble.innerHTML = formatLinks(content);
+
+  // Use safe message creation to prevent XSS
+  const safeContent = createSafeMessageElement(content);
+  bubble.appendChild(safeContent);
 
   wrapper.appendChild(bubble);
   messagesEl.appendChild(wrapper);
-  
-  // Otomatik aşağı kaydır
+
+  // Auto-scroll to bottom
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
-// SEND
-function sendMessage() {
-  const text = promptEl.value.trim();
-  if (!text) return;
-  if (!getCurrentChat()) createNewChat();
 
-  addMessage("user", text);
-  promptEl.value = "";
-  
-  fetch("https://hook.eu2.make.com/st14fh11cfbigyzpxo6clkermnat59v8", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: text })
-  })
-  .then(res => res.text()) // JSON DEĞİL, direkt metin olarak alıyoruz
-  .then(data => {
-    // Gelen veri direkt AI'ın cevabı olduğu için parse etmeden yazdırıyoruz
-    if (data) {
-      addMessage("assistant", data);
-    } else {
-      addMessage("assistant", "Yanıt boş geldi.");
-    }
-  })
-  .catch(err => {
-    console.error("Bağlantı hatası:", err);
-    addMessage("assistant", "Bağlantı hatası oluştu.");
-  });
+// ============================================================================
+// MESSAGE HANDLING
+// ============================================================================
+
+function addMessage(role, content) {
+  const chat = getCurrentChat();
+  if (!chat) return;
+
+  chat.messages.push({ role, content });
+
+  // Set chat title from first user message
+  if (chat.messages.length === 1 && role === "user") {
+    chat.title = content.slice(0, 30).trim() || "Sohbet";
+  }
+
+  saveState();
+  renderChats();
+  addMessageToDOM(role, content);
 }
 
-// EVENTS
+async function sendMessage() {
+  const text = promptEl.value.trim();
+  if (!text || state.isLoading) return;
+
+  // Create new chat if needed
+  if (!getCurrentChat()) {
+    createNewChat();
+  }
+
+  // Add user message
+  addMessage("user", text);
+  promptEl.value = "";
+
+  // Auto-resize textarea
+  promptEl.style.height = "auto";
+
+  // Show loading state
+  setLoading(true);
+
+  try {
+    const response = await fetch(MAKE_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: text })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const data = await response.text();
+
+    if (data && data.trim()) {
+      addMessage("assistant", data.trim());
+    } else {
+      addMessage("assistant", "Yanıt boş geldi. Lütfen tekrar deneyin.");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+
+    let errorMessage = "Bağlantı hatası oluştu.";
+    if (error.message.includes("Failed to fetch")) {
+      errorMessage = "Ağ bağlantısı kontrol edin.";
+    } else if (error.message.includes("HTTP Error")) {
+      errorMessage = "Sunucu hatası. Lütfen daha sonra tekrar deneyin.";
+    }
+
+    addMessage("assistant", errorMessage);
+  } finally {
+    setLoading(false);
+    promptEl.focus();
+  }
+}
+
+// ============================================================================
+// EXPORT FUNCTIONALITY
+// ============================================================================
+
+function exportChats() {
+  if (state.chats.length === 0) {
+    alert("Dışa aktarmak için sohbet bulunmuyor.");
+    return;
+  }
+
+  const exportData = {
+    exportDate: new Date().toISOString(),
+    totalChats: state.chats.length,
+    chats: state.chats
+  };
+
+  const jsonString = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `lupux-chats-${Date.now()}.json`;
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  alert(`${state.chats.length} sohbet başarıyla indirildi.`);
+}
+
+// ============================================================================
+// EVENT LISTENERS
+// ============================================================================
+
+// Send message on button click
 sendBtn.onclick = sendMessage;
 
+// Send message on Enter (Shift+Enter for new line)
 promptEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -188,15 +374,41 @@ promptEl.addEventListener("keydown", (e) => {
   }
 });
 
+// Auto-resize textarea
+promptEl.addEventListener("input", (e) => {
+  e.target.style.height = "auto";
+  e.target.style.height = Math.min(e.target.scrollHeight, 200) + "px";
+});
+
+// New chat button
 newChatBtn.onclick = createNewChat;
 
-// INIT
-if (!chats.length) {
-  createNewChat();
-} else if (!currentChatId || !getCurrentChat()) {
-  currentChatId = chats[0].id;
-  saveState();
+// Theme toggle
+themeBtn.onclick = toggleTheme;
+
+// Export button
+exportBtn.onclick = exportChats;
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+function initialize() {
+  // Initialize theme
+  initializeTheme();
+
+  // Initialize chats
+  if (state.chats.length === 0) {
+    createNewChat();
+  } else if (!state.currentChatId || !getCurrentChat()) {
+    state.currentChatId = state.chats[0].id;
+    saveState();
+  }
+
+  renderChats();
+  renderMessages();
+  promptEl.focus();
 }
 
-renderChats();
-renderMessages();
+// Start app
+initialize();

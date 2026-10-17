@@ -2,11 +2,9 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>LupuX AI</title>
+  <title>LupuX AI - Chat Interface</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="shortcut icon" href="favicon.png" />
-
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -16,34 +14,26 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <a href="https://lupusoftco.github.io"><img src="logo_ui.png" alt="logo" title="LupuX AI" width="100%"></a>
-      <button id="newChatBtn" class="new-chat-btn">＋ Yeni Sohbet</button>
+      <a href="https://lupusoftco.github.io" class="logo-link">
+        <img src="logo_ui.png" alt="LupuX AI" title="LupuX AI" width="100%">
+      </a>
+      <button id="newChatBtn" class="new-chat-btn" title="Yeni Sohbet Başlat">＋ Yeni Sohbet</button>
     </div>
 
     <div class="chat-history" id="chatList">
-      <!-- Chat item -->
-      <div class="chat-item active">
-        <span class="chat-title">Yeni Sohbet</span>
-        <button class="chat-delete-btn" title="Delete">🗑</button>
-      </div>
-
-      <!-- örnek -->
-      <div class="chat-item">
-        <span class="chat-title">Chat 2</span>
-        <button class="chat-delete-btn">🗑</button>
-      </div>
+      <!-- Dinamik olarak doldurulur -->
     </div>
 
     <div class="sidebar-footer">
-      <div class="user-info">
-          <div class="info-container">
-          <span class="info-icon">ℹ️ <span class="username">LupuX AI</span></span>
-          <div class="info-bubble">
-            <strong>Nasıl Kullanılır?</strong><br>
-            - Prompt yazın (örn: Merhaba!)<br>
-            - Webhook Make AI Agent<br>
-            - Hazırlayan: Lupusoft
-          </div>
+      <button id="exportBtn" class="footer-btn" title="Tüm Sohbetleri İndir">💾 İndir</button>
+      <button id="themeBtn" class="footer-btn" title="Tema Değiştir">🌙 Tema</button>
+
+      <div class="info-container">
+        <span class="info-icon">ℹ️</span>
+        <div class="info-bubble">
+          <strong>LupuX AI</strong><br>
+          Yapay zeka destekli sohbet<br>
+          <small>© Lupusoft</small>
         </div>
       </div>
     </div>
@@ -54,26 +44,22 @@
 
     <!-- HEADER -->
     <header class="chat-header">
-      <h1 class="chat-title-main">Sohbet</h1>
+      <h1 class="chat-title-main">LupuX AI Sohbet</h1>
     </header>
 
     <!-- MESSAGES -->
     <section class="messages" id="messages">
-      <!-- Assistant message -->
-      <div class="message assistant">
-        <div class="avatar"></div>
-        <div class="bubble">
-          Merhaba, nasıl yardımcı olabilirim?
-        </div>
-      </div>
-
-      <!-- User message -->
-      <div class="message user">
-        <div class="bubble">
-          Selam
-        </div>
-      </div>
+      <!-- Dinamik olarak doldurulur -->
     </section>
+
+    <!-- LOADING INDICATOR -->
+    <div class="loading-indicator" id="loadingIndicator" style="display:none;">
+      <div class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
 
     <!-- INPUT AREA -->
     <footer class="chat-input-area">
@@ -81,12 +67,10 @@
         <textarea
           id="prompt"
           rows="1"
-          placeholder="Mesaj yaz..."
+          placeholder="Mesaj yaz... (Shift+Enter = yeni satır)"
+          autocomplete="off"
         ></textarea>
-
-        <button id="sendBtn" class="send-btn">
-          ➤
-        </button>
+        <button id="sendBtn" class="send-btn" title="Gönder (Enter)">➤</button>
       </div>
     </footer>
 
@@ -94,7 +78,6 @@
 
 </div>
 
-<!-- JS -->
 <script src="script.js"></script>
 </body>
 </html>
