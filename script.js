@@ -35,6 +35,7 @@ const state = {
 function initializeTheme() {
   const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || "dark";
   applyTheme(savedTheme);
+  updateLogoBasedOnTheme(savedTheme === "light");
 }
 
 function applyTheme(theme) {
@@ -49,7 +50,8 @@ function updateLogoBasedOnTheme(isLight) {
   const logoImg = document.querySelector('.logo-link img');
   if (logoImg) {
     // Light theme uses light logo, dark theme uses dark logo
-    logoImg.src = isLight ? "logo_ui_light.png" : "logo_ui.png";
+    const filename = isLight ? "logo_ui_light.png" : "logo_ui.png";
+    logoImg.src = filename + "?v=" + Date.now();
   }
 }
 
