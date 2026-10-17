@@ -496,10 +496,10 @@ async function sendMessage() {
     if (learnings.length > 0) {
       const learningsContext = learnings
         .slice(0, 20) // Last 20 learnings
-        .map(l => `- ${l.category} | ${l.title}: ${l.content}`)
+        .map(l => `• ${l.title}: ${l.content}`)
         .join('\n');
 
-      contextText = `📚 ÖNCEKI ÖĞRENMELER:\n${learningsContext}\n\nYENİ SORU:\n${text}`;
+      contextText = `📖 BİLGİ BANKASI (Daha önceki dersler):\n${learningsContext}\n\n---\n\n${text}`;
     }
 
     const response = await fetch(MAKE_WEBHOOK_URL, {
