@@ -36,8 +36,10 @@ const state = {
 
 function initializeTheme() {
   const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || "dark";
+  const isLight = savedTheme === "light";
   applyTheme(savedTheme);
-  updateLogoBasedOnTheme(savedTheme === "light");
+  updateLogoBasedOnTheme(isLight);
+  updateAvatarBackground(isLight);
 }
 
 function applyTheme(theme) {
@@ -55,6 +57,17 @@ function updateLogoBasedOnTheme(isLight) {
     const filename = isLight ? "logo_ui_dark.png" : "logo_ui_light.png";
     logoImg.src = filename + "?v=" + Math.random();
   }
+
+  // Update avatar background based on theme
+  updateAvatarBackground(isLight);
+}
+
+function updateAvatarBackground(isLight) {
+  const avatars = document.querySelectorAll('.message.assistant .avatar');
+  avatars.forEach(avatar => {
+    const filename = isLight ? "logo_ui_dark.png" : "logo_ui_light.png";
+    avatar.style.backgroundImage = `url('${filename}?v=' + Math.random())`;
+  });
 }
 
 function toggleTheme() {
