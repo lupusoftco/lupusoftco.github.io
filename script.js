@@ -272,8 +272,9 @@ function setLoading(isLoading) {
   state.isLoading = isLoading;
   loadingIndicator.style.display = isLoading ? "flex" : "none";
   sendBtn.disabled = isLoading;
+  promptEl.disabled = isLoading;
 
-  if (isLoading) {
+  if (!isLoading) {
     promptEl.focus();
   }
 }
