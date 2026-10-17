@@ -244,9 +244,16 @@ body {
 .message.assistant .avatar {
   width: 32px;
   height: 32px;
+  min-width: 32px;
   border-radius: 50%;
-  background: url("favicon.png") no-repeat center center / contain;
+  background-color: var(--accent-color);
+  background-image: url("favicon.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 70%;
   flex-shrink: 0;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 0 1px var(--border-color);
 }
 
 .message.user {
