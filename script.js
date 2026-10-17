@@ -3,12 +3,12 @@
 // Features: Dark Mode, Export Chats, Loading State, XSS Protection, Learning Module
 // ============================================================================
 
-// LEARNING MODULE
+// LEARNING MODULE - Auto-learns from AI responses
 class LearningHandler {
-  constructor(githubToken = null) {
-    this.githubToken = githubToken;
-    this.learnings = [];
+  constructor() {
     this.learningPattern = /\[LEARNING\]\s+([^|]+)\|\s+([^|]+)\|\s+(.+?)(?=\n|$)/g;
+    this.storageKey = 'lupux_learnings';
+    this.maxLearnings = 500;
   }
 
   extractLearnings(aiResponse) {
@@ -18,6 +18,7 @@ class LearningHandler {
 
     while ((match = this.learningPattern.exec(aiResponse)) !== null) {
       learnings.push({
+        id: Date.now() + Math.random(),
         category: match[1].trim(),
         title: match[2].trim(),
         content: match[3].trim(),
@@ -29,39 +30,111 @@ class LearningHandler {
     return learnings;
   }
 
-  saveLearningLocally(learning) {
+  saveLearning(learning) {
     try {
-      const stored = JSON.parse(localStorage.getItem('lupux_learnings') || '[]');
-      stored.push(learning);
-      localStorage.setItem('lupux_learnings', JSON.stringify(stored));
+      const stored = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+
+      // Prevent duplicates
+      if (stored.some(l => l.title === learning.title && l.category === learning.category)) {
+        return false;
+      }
+
+      stored.unshift(learning); // Add to beginning
+
+      // Keep only latest N learnings
+      if (stored.length > this.maxLearnings) {
+        stored.pop();
+      }
+
+      localStorage.setItem(this.storageKey, JSON.stringify(stored));
+      showToast(`📚 Yeni öğrenme kaydedildi: ${learning.title}`, 'success');
       console.log('✅ Learning saved:', learning.title);
+      return true;
     } catch (error) {
       console.error('❌ Error saving learning:', error);
+      showToast('Öğrenme kaydedilirken hata oluştu', 'error');
+      return false;
     }
   }
 
-  async processResponse(aiResponse) {
+  processResponse(aiResponse) {
     const learnings = this.extractLearnings(aiResponse);
 
-    if (learnings.length === 0) {
-      return;
+    if (learnings.length > 0) {
+      learnings.forEach(learning => this.saveLearning(learning));
+      return learnings.length;
     }
 
-    for (const learning of learnings) {
-      this.saveLearningLocally(learning);
-    }
+    return 0;
   }
 
   getAllLearnings() {
     try {
-      return JSON.parse(localStorage.getItem('lupux_learnings') || '[]');
+      return JSON.parse(localStorage.getItem(this.storageKey) || '[]');
     } catch (error) {
+      console.error('Error retrieving learnings:', error);
       return [];
     }
+  }
+
+  getLearningsByCategory(category) {
+    return this.getAllLearnings().filter(l => l.category.includes(category));
+  }
+
+  getTotalCount() {
+    return this.getAllLearnings().length;
+  }
+
+  clearAllLearnings() {
+    if (confirm('Tüm öğrenmeleri silmek istediğinize emin misiniz?')) {
+      localStorage.removeItem(this.storageKey);
+      showToast('Tüm öğrenmeler silindi', 'info');
+      return true;
+    }
+    return false;
   }
 }
 
 const learningHandler = new LearningHandler();
+
+// Toast Notification System
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+    max-width: 300px;
+    word-wrap: break-word;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  `;
+
+  const colors = {
+    success: { bg: '#10a37f', text: '#fff' },
+    error: { bg: '#ff6b6b', text: '#fff' },
+    info: { bg: '#4a90e2', text: '#fff' },
+    warning: { bg: '#f5a623', text: '#fff' }
+  };
+
+  const color = colors[type] || colors.info;
+  toast.style.backgroundColor = color.bg;
+  toast.style.color = color.text;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s ease-in';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
 
 // DOM ELEMENTS
 const chatList = document.getElementById("chatList");
