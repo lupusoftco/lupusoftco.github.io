@@ -50,8 +50,8 @@ function updateLogoBasedOnTheme(isLight) {
   const logoImg = document.querySelector('.logo-link img');
   if (logoImg) {
     // Light theme uses dark logo, dark theme uses light logo (for contrast)
-    const filename = isLight ? "logo_ui.png" : "logo_ui_light.png";
-    logoImg.src = filename + "?v=" + Date.now();
+    const filename = isLight ? "logo_ui_dark.png" : "logo_ui_light.png";
+    logoImg.src = filename + "?v=" + Math.random();
   }
 }
 
